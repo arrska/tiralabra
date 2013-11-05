@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "tree.h"
+#include "flist.h"
 
 
 uint8_t least(int bytes[256]) {
@@ -44,15 +45,22 @@ tree* buildTree(FILE* file) {
 		c = fgetc(file);
 	}
 	
-	for (int i = 1;i<256;i++)
+	/*for (int i = 1;i<256;i++)
 		if (bytes[i] != 0)
-			printf("0x%x  %d\n", i, bytes[i]);
+			printf("0x%x  %d\n", i, bytes[i]);*/
 		
 	uint8_t byte = most(bytes);
 	printf("most of this: 0x%x, this many: %d\n", byte, bytes[byte]);
 	
 	byte = least(bytes);
 	printf("least of this: 0x%x, this many: %d\n", byte, bytes[byte]);
+	
+	fList* list = newFreqList(8);
+	for (int i = 0;i<256;i++) {
+		fListInsert(list, i, bytes[i]);
+	}
+	
+	printall(list);
 	
 	return NULL;
 }

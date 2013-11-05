@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "tree.h"
+#include "flist.h"
 
 
 int main() {
