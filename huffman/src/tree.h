@@ -3,16 +3,16 @@
 #include <inttypes.h>
 
 #ifndef TREE_H
-#define	TREE_H
+#define TREE_H
 
 typedef struct node {
     struct node* left;
     struct node* right;
-    uint8_t byte;
-    int value;
+	unsigned int data;
+    unsigned int value;
 } tree;
 
-tree* buildTree(FILE* file);
+tree* buildTree(FILE* file, int blockSize);
 
 #endif
 

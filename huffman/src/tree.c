@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "tree.h"
 #include "flist.h"
@@ -31,36 +32,42 @@ uint8_t most(int bytes[256]) {
 	return m;
 }
 
-tree* buildTree(FILE* file) {
+tree* buildTree(FILE* file, int blockSize) {
 	if (file == NULL)
 		return NULL;
 	
-	int bytes[256] ={0};
+	if (blockSize <= 0 || blockSize > sizeof(int))
+		return NULL;
+	
+	unsigned int* bytes = calloc(1 << blockSize*8, sizeof(int));
 
-	int c = fgetc(file);
+	unsigned int* c = calloc(1, sizeof(int));
+	int ret;
 	
-	while (c != EOF) {
-		printf("%c", c);
-		bytes[c]++;
-		c = fgetc(file);
-	}
+	do {
+		ret = fread(c, blockSize, 1, file);
+		//printf("%s", c);
+		//printf("%x ", *c);
+		bytes[*c]++;
+	} while (ret == 1);
 	
-	/*for (int i = 1;i<256;i++)
-		if (bytes[i] != 0)
-			printf("0x%x  %d\n", i, bytes[i]);*/
-		
-	uint8_t byte = most(bytes);
-	printf("most of this: 0x%x, this many: %d\n", byte, bytes[byte]);
-	
-	byte = least(bytes);
-	printf("least of this: 0x%x, this many: %d\n", byte, bytes[byte]);
-	
-	fList* list = newFreqList(8);
-	for (int i = 0;i<256;i++) {
+	fList* list = newFreqList(blockSize);
+	for (int i = 0;i<list->count;i++) {
 		fListInsert(list, i, bytes[i]);
 	}
 	
-	printall(list);
+	fListNode* n;
+	n = fListMax(list);
+	printf("most of this: 0x%x, this many: %d\n", n->data, n->count);
+	n = fListMin(list);
+	printf("least of this: 0x%x, this many: %d\n", n->data, n->count);
+	
+	while (n = fListMin(list)) {
+		if (n->count > 0)
+			printf("0x%02x  %d\n", n->data, n->count);
+		fListRemove(list, n);
+	}
+	//printall(list);
 	
 	return NULL;
 }

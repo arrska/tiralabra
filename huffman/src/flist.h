@@ -3,11 +3,11 @@
 #include <inttypes.h>
 
 #ifndef FLIST_H
-#define	FLIST_H
+#define FLIST_H
 
 typedef struct flnode {
 	unsigned int count;
-	unsigned int value;
+	unsigned int data;
 	struct flnode* next;
 	struct flnode* prev;
 } fListNode;
@@ -19,11 +19,10 @@ typedef struct flistheader {
 } fList;
 
 fList* newFreqList(uint8_t unitsize);
-void fListInsert(fList* list, uint32_t value, uint32_t count);
-//void fListRemove();
-
-//fListNode* fListMin();
-//fListNode* fListMax();
+void fListInsert(fList* list, uint32_t data, uint32_t count);
+void fListRemove(fList* list, fListNode* node);
+fListNode* fListMin(fList* list);
+fListNode* fListMax(fList* list);
 
 void printall();
 

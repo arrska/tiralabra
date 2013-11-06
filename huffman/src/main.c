@@ -6,9 +6,9 @@
 
 
 int main() {
-    FILE* f = fopen("testdata", "r");
+    FILE* f = fopen("testdata2", "r");
     
-    buildTree(f);
+    buildTree(f, sizeof(uint8_t)*2);
 
     return 0;
 }
