@@ -6,6 +6,3 @@ main:
 
 clean:
 	$(MAKE) -C $(MAIN_DIR) clean
-
-run-main:
-	$(MAKE) -C $(MAIN_DIR) run
