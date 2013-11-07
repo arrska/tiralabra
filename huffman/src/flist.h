@@ -8,7 +8,7 @@
 typedef struct flnode {
 	unsigned int count;
 	unsigned int data;
-	struct flnode* next;
+	struct flnode* next; //remove prev?
 	struct flnode* prev;
 } fListNode;
 
@@ -16,6 +16,7 @@ typedef struct flistheader {
 	uint8_t unitsize;
 	uint64_t count;
 	fListNode* first;
+	//add pointer to last?
 } fList;
 
 fList* newFreqList(uint8_t unitsize);

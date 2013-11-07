@@ -80,6 +80,7 @@ fListNode* fListMin(fList* list) {
 	return list->first;
 }
 
+//useless...?
 fListNode* fListMax(fList* list) {
 	if (list == NULL) return NULL;
 	if (list->first == NULL) return NULL;
