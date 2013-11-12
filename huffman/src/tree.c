@@ -39,7 +39,8 @@ tree* buildTree(FILE* file, int blockSize) {
 	if (blockSize <= 0 || blockSize > sizeof(int))
 		return NULL;
 	
-	unsigned int* bytes = calloc(1 << blockSize*8, sizeof(int));
+	uint32_t elems = 1 << blockSize*8;
+	unsigned int* bytes = calloc(elems, sizeof(int));
 
 	unsigned int* c = calloc(1, sizeof(int));
 	int ret;
@@ -52,8 +53,9 @@ tree* buildTree(FILE* file, int blockSize) {
 	} while (ret == 1);
 	
 	fList* list = newFreqList(blockSize);
-	for (int i = 0;i<list->count;i++) {
-		fListInsert(list, i, bytes[i]);
+	for (int i = 0;i<elems;i++) {
+		fListInsert(list, newfListNode(i, bytes[i], 0));
+		//fListInsert(list, i, bytes[i]);
 	}
 	
 	fListNode* n;
@@ -62,11 +64,32 @@ tree* buildTree(FILE* file, int blockSize) {
 	n = fListMin(list);
 	printf("least of this: 0x%x, this many: %d\n", n->data, n->count);
 	
-	while (n = fListMin(list)) {
+	fListNode* n2;
+	fListNode* p;
+	while(list->count > 1) {
+		n = fListRemove(list, fListMin(list));
+		n2 = fListRemove(list, fListMin(list));
+		
+		p = newfListNode(-1, n->count+n2->count, 1);
+		
+		if (n->count > n2->count) {
+			p->left = n2;
+			p->right = n;
+		} else {
+			p->left = n;
+			p->right = n2;
+		}
+		
+		fListInsert(list, p);
+	}
+	
+	
+	
+	/*while (n = fListMin(list)) {
 		if (n->count > 0)
 			printf("0x%02x  %d\n", n->data, n->count);
 		fListRemove(list, n);
-	}
+	}*/
 	//printall(list);
 	
 	return NULL;

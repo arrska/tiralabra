@@ -6,21 +6,66 @@
 fList* newFreqList(uint8_t unitsize) {
 	fList* list = malloc(sizeof(fList));
 	list->unitsize = unitsize;
-	list->count = 1 << unitsize*8;// pow(2, unitsize);
+	list->count = 0;// << unitsize*8;// pow(2, unitsize);
 	list->first = NULL;
 	
 	return list;
 }
 
-void fListInsert(fList* list, uint32_t data, uint32_t count) {
+fListNode* newfListNode(uint32_t data, uint32_t count, uint8_t internal) {
 	fListNode* newnode = malloc(sizeof(fListNode));
 	
 	newnode->data = data;
 	newnode->count = count;
+	newnode->internal = internal;
+	newnode->left = NULL;
+	newnode->right = NULL;
+	newnode->next = NULL;
+	newnode->prev = NULL;
+	
+	return newnode;
+}
+
+void fListInsert(fList* list, uint32_t data, uint32_t count) {
+	fListNode* newnode = malloc(sizeof(fListNode));
+	
+	list->count++;
+	newnode->data = data;
+	newnode->count = count;
+	newnode->internal = 0;
 	
 	if (list->first == NULL) {
 		newnode->next = newnode;
 		newnode->prev = newnode;
+		list->first = newnode;
+		
+		return;
+	}
+	
+	fListNode* node = list->first;
+	
+	while (node->count < count) {
+		node = node->next;
+		
+		if (node == list->first) break;
+	}
+	
+	if (node == list->first && node->count >= count)
+		list->first = newnode;
+	
+	newnode->prev = node->prev;
+	newnode->next = node;
+	
+	node->prev->next = newnode;
+	node->prev = newnode;
+}
+
+void fListInsertNode(fList* list, fListNode* newnode) {
+	list->count++;
+	
+	if (list->first == NULL) {
+		node->next = newnode;
+		node->prev = newnode;
 		list->first = newnode;
 		
 		return;
@@ -57,7 +102,7 @@ void printall(fList* list) {
 	} while (n != list->first);
 }
 
-void fListRemove(fList* list, fListNode* node) {
+fListNode* fListRemove(fList* list, fListNode* node) {
 	list->count--;
 	
 	if (node->next == node) {
@@ -72,7 +117,7 @@ void fListRemove(fList* list, fListNode* node) {
 		node->next->prev = node->prev;
 	}
 	
-	free(node);
+	return node;
 }
 
 fListNode* fListMin(fList* list) {
