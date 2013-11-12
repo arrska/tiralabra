@@ -28,8 +28,9 @@ typedef struct flistheader {
 } fList;
 
 fList* newFreqList(uint8_t unitsize);
-void fListInsert(fList* list, uint32_t data, uint32_t count);
-void fListInsertNode(fList* list, fListNode* node);
+fListNode* newfListNode(uint32_t data, uint32_t count, uint8_t internal);
+//void fListInsert(fList* list, uint32_t data, uint32_t count);
+void fListInsert(fList* list, fListNode* newnode);
 fListNode* fListRemove(fList* list, fListNode* node);
 fListNode* fListMin(fList* list);
 fListNode* fListMax(fList* list);
@@ -37,4 +38,5 @@ fListNode* fListMax(fList* list);
 void printall();
 
 
+void dfsTree(uint32_t* codes, uint32_t* bitcount, fListNode* node, int bits, uint32_t repr);
 #endif

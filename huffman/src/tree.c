@@ -32,6 +32,8 @@ uint8_t most(int bytes[256]) {
 	return m;
 }
 
+
+
 tree* buildTree(FILE* file, int blockSize) {
 	if (file == NULL)
 		return NULL;
@@ -54,7 +56,8 @@ tree* buildTree(FILE* file, int blockSize) {
 	
 	fList* list = newFreqList(blockSize);
 	for (int i = 0;i<elems;i++) {
-		fListInsert(list, newfListNode(i, bytes[i], 0));
+		if (bytes[i] > 0)
+			fListInsert(list, newfListNode(i, bytes[i], 0));
 		//fListInsert(list, i, bytes[i]);
 	}
 	
@@ -66,6 +69,7 @@ tree* buildTree(FILE* file, int blockSize) {
 	
 	fListNode* n2;
 	fListNode* p;
+	
 	while(list->count > 1) {
 		n = fListRemove(list, fListMin(list));
 		n2 = fListRemove(list, fListMin(list));
@@ -81,9 +85,28 @@ tree* buildTree(FILE* file, int blockSize) {
 		}
 		
 		fListInsert(list, p);
+	/*printf(
+		"R:0x%08x (%1d) (%3d)  L:0x%08x (%1d) (%3d)\n", 
+		p->right->data, 
+			(p->right->right == NULL && p->right->left == NULL), 
+			p->right->count, 
+		p->left->data, 
+			(p->left->right == NULL && p->left->left == NULL), 
+		p->left->count);*/
 	}
 	
+	//printf("r:0x%x l:0x%x\n", list->first->right->data, list->first->left->data);
 	
+	//DFS
+	uint32_t* codes = calloc(elems, sizeof(uint32_t));
+	uint32_t* bitcount = calloc(elems, sizeof(uint32_t));
+	dfsTree(codes, bitcount, list->first, 0, 0);
+	
+	for (int i = 0;i<elems;i++) {
+		if (bitcount[i] > 0) {
+			printf("data: %02x    bits:%2d    code:0x%04x\n", i, bitcount[i], codes[i]);
+		}
+	}
 	
 	/*while (n = fListMin(list)) {
 		if (n->count > 0)

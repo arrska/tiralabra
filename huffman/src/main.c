@@ -8,7 +8,7 @@
 int main() {
     FILE* f = fopen("testdata2", "r");
     
-    buildTree(f, sizeof(uint8_t)*2);
+    buildTree(f, sizeof(uint8_t));
 
     return 0;
 }

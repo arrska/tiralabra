@@ -26,7 +26,7 @@ fListNode* newfListNode(uint32_t data, uint32_t count, uint8_t internal) {
 	return newnode;
 }
 
-void fListInsert(fList* list, uint32_t data, uint32_t count) {
+/*void fListInsert(fList* list, uint32_t data, uint32_t count) {
 	fListNode* newnode = malloc(sizeof(fListNode));
 	
 	list->count++;
@@ -58,14 +58,14 @@ void fListInsert(fList* list, uint32_t data, uint32_t count) {
 	
 	node->prev->next = newnode;
 	node->prev = newnode;
-}
+}*/
 
-void fListInsertNode(fList* list, fListNode* newnode) {
+void fListInsert(fList* list, fListNode* newnode) {
 	list->count++;
 	
 	if (list->first == NULL) {
-		node->next = newnode;
-		node->prev = newnode;
+		newnode->next = newnode;
+		newnode->prev = newnode;
 		list->first = newnode;
 		
 		return;
@@ -73,13 +73,13 @@ void fListInsertNode(fList* list, fListNode* newnode) {
 	
 	fListNode* node = list->first;
 	
-	while (node->count < count) {
+	while (node->count < newnode->count) {
 		node = node->next;
 		
 		if (node == list->first) break;
 	}
 	
-	if (node == list->first && node->count >= count)
+	if (node == list->first && node->count >= newnode->count)
 		list->first = newnode;
 	
 	newnode->prev = node->prev;
@@ -130,4 +130,24 @@ fListNode* fListMax(fList* list) {
 	if (list == NULL) return NULL;
 	if (list->first == NULL) return NULL;
 	return list->first->prev;
+}
+
+
+void dfsTree(uint32_t* codes, uint32_t* bitcount, fListNode* node, int bits, uint32_t repr) {
+	//if node is child
+	printf("nodenode 0x%08x  %3d  0x%04x \n", node->data, node->count, repr);
+	if (node->left == NULL && node->right == NULL) {
+		codes[node->data] = repr;
+		bitcount[node->data] = bits;
+		return;
+	}
+	
+	if (node->left != NULL) {
+		printf("left\n");
+		dfsTree(codes, bitcount, node->left, bits+1, repr << 1);
+	}
+	if (node->right != NULL) {
+		printf("right\n");
+		dfsTree(codes, bitcount, node->right, bits+1, repr << 1 | 1);
+	}
 }
