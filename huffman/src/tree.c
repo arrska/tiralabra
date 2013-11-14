@@ -34,17 +34,17 @@ uint8_t most(int bytes[256]) {
 
 
 
-tree* buildTree(FILE* file, int blockSize) {
+void buildTree(FILE* file, int blockSize) {
 	if (file == NULL)
-		return NULL;
+		return;
 	
 	if (blockSize <= 0 || blockSize > sizeof(int))
-		return NULL;
+		return;
 	
 	uint32_t elems = 1 << blockSize*8;
-	unsigned int* bytes = calloc(elems, sizeof(int));
+	uint32_t* bytes = calloc(elems, sizeof(uint32_t));
 
-	unsigned int* c = calloc(1, sizeof(int));
+	uint32_t* c = calloc(1, sizeof(uint32_t));
 	int ret;
 	
 	do {
@@ -104,7 +104,7 @@ tree* buildTree(FILE* file, int blockSize) {
 	
 	for (int i = 0;i<elems;i++) {
 		if (bitcount[i] > 0) {
-			printf("data: %02x    bits:%2d    code:0x%04x\n", i, bitcount[i], codes[i]);
+			printf("data: %02x (%c)    bits:%2d    code:0x%04x\n", i, i, bitcount[i], codes[i]);
 		}
 	}
 	
@@ -114,6 +114,4 @@ tree* buildTree(FILE* file, int blockSize) {
 		fListRemove(list, n);
 	}*/
 	//printall(list);
-	
-	return NULL;
 }
