@@ -1,4 +1,4 @@
-SRC_FILES=main.c tree.c flist.c heap.c
+SRC_FILES=main.c huff.c heap.c
 
 all: main
 
