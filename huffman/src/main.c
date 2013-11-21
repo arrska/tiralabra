@@ -4,7 +4,7 @@
 #include "heap.h"
 #include "huff.h"
 
-
+//why is this here? not in the main
 heap* loadheap(FILE* file, int blockSize) {
 	if (file == NULL)
 		return NULL;
@@ -13,6 +13,7 @@ heap* loadheap(FILE* file, int blockSize) {
 		return NULL;
 	
 	uint32_t elems = 1 << blockSize*8;
+	//hash table maybe? at least for bigger blocks
 	uint32_t* bytes = calloc(elems, sizeof(uint32_t));
 	uint32_t* c = calloc(blockSize, sizeof(uint8_t));
 	
@@ -22,7 +23,7 @@ heap* loadheap(FILE* file, int blockSize) {
 	while (ret == blockSize) {
 		bytes[*c]++;
 		*c = 0;
-		ret = fread(c, 1, blockSize, file);
+		ret = fread(c, blockSize, 1, file);
 	}
 	//do something with last block if not full
 	printf("last read: %d bytes, data: 0x%04x\n", ret, *c); 
@@ -32,6 +33,7 @@ heap* loadheap(FILE* file, int blockSize) {
 	for (int i = 0;i<elems;i++) {
 		if (bytes[i] > 0) {
 			heapInsert(h, newHeapNode(i, bytes[i]));
+			printf("insert: %c, %d\n", i, bytes[i]); 
 		}
 	}
 	/*
@@ -54,8 +56,13 @@ void emptyHeap(heap* h) {
 int main() {
     FILE* f = fopen("testdata", "r");
     int s = 1;
+	uint32_t elems = 1 << s*8;
     heap* h = loadheap(f, sizeof(uint8_t)*s);
-    huff(h);
+    uint32_t* codelens = calloc(elems, sizeof(uint32_t));
+    uint32_t* codes = huff(h, codelens);
+    
+    FILE* fw = fopen("compressed", "w");
+    writeData(f, fw, codes, codelens, sizeof(uint8_t)*s);
 	//emptyHeap(h);
 
     return 0;
