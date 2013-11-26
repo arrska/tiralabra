@@ -41,6 +41,25 @@ void dfsTree(heapNode* n, uint32_t* codes, uint32_t* codelens, uint32_t code, ui
 	dfsTree(n->left, codes, codelens, (code << 1), codelen+1);
 }
 
+void readData(FILE* compf) {
+	long filesize;
+	fread(&filesize, sizeof(long), 1, compf);
+	char blocksize;
+	fread(&blocksize, sizeof(char), 1, compf);
+	int elems = 1<<blocksize*8;
+	uint32_t* codes = calloc(elems, sizeof(uint32_t));
+	uint32_t blk = 0;
+	
+	int ret = 0;
+	do {
+		fread(&blk, blocksize, 1, compf);
+		
+		ret = fread(&codes[blk], sizeof(uint32_t), 1, compf);
+		printf("block: %1$x (%1$c), code: 0x%2$02x\n", blk, codes[blk]);
+	
+	} while (ret);
+}
+
 //so sad code
 void writeData(FILE* origf, FILE* compf, uint32_t* codes, uint32_t* codelens, uint8_t block) {
 	uint32_t* buff = calloc(block, sizeof(uint8_t)*block);
@@ -49,12 +68,16 @@ void writeData(FILE* origf, FILE* compf, uint32_t* codes, uint32_t* codelens, ui
 	int bits = 0;
 	int ret = block;
 	int elems = 1<<block*8;
+	fseek(origf, 0, SEEK_END);
+	long filesize = ftell(origf);
 	
+	fwrite(&filesize, sizeof(long), 1, compf);
+	printf("original filesize was %d\n", filesize);
 	fwrite(&block, sizeof(uint8_t), 1, compf);
 	
 	for (uint32_t i = 0; i<elems; i++) {
 		if (codes[i]>0) {
-			fwrite(&i, sizeof(uint32_t), 1, compf);
+			fwrite(&i, block, 1, compf);
 			fwrite(&codes[i], sizeof(uint32_t), 1, compf);
 		}
 	}

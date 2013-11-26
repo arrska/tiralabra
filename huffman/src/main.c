@@ -53,17 +53,23 @@ void emptyHeap(heap* h) {
 	}
 }
 
-int main() {
-    FILE* f = fopen("testdata", "r");
-    int s = 1;
+int main(int argc, char *argv[]) {
+	printf("args: %d\n", argc);
+	printf("arg1: %s\n", argv[1]);
+  FILE* cf = fopen(argv[1], "r");
+	readData(cf);
+	return 0;
+	
+  FILE* f = fopen("testdata", "r");
+  int s = 1;
 	uint32_t elems = 1 << s*8;
-    heap* h = loadheap(f, sizeof(uint8_t)*s);
-    uint32_t* codelens = calloc(elems, sizeof(uint32_t));
-    uint32_t* codes = huff(h, codelens);
+  heap* h = loadheap(f, sizeof(uint8_t)*s);
+  uint32_t* codelens = calloc(elems, sizeof(uint32_t));
+  uint32_t* codes = huff(h, codelens);
     
-    FILE* fw = fopen("compressed", "w");
-    writeData(f, fw, codes, codelens, sizeof(uint8_t)*s);
+  FILE* fw = fopen("compressed", "w");
+  writeData(f, fw, codes, codelens, sizeof(uint8_t)*s);
 	//emptyHeap(h);
 
-    return 0;
+  return 0;
 }
