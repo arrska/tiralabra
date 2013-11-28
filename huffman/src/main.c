@@ -1,75 +1,43 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "heap.h"
 #include "huff.h"
 
-//why is this here? not in the main
-heap* loadheap(FILE* file, int blockSize) {
-	if (file == NULL)
-		return NULL;
-	
-	if (blockSize <= 0 || blockSize > sizeof(uint32_t))
-		return NULL;
-	
-	uint32_t elems = 1 << blockSize*8;
-	//hash table maybe? at least for bigger blocks
-	uint32_t* bytes = calloc(elems, sizeof(uint32_t));
-	uint32_t* c = calloc(blockSize, sizeof(uint8_t));
-	
-	int ret = blockSize;
-	
-	bytes[*c]--;
-	while (ret == blockSize) {
-		bytes[*c]++;
-		*c = 0;
-		ret = fread(c, blockSize, 1, file);
-	}
-	//do something with last block if not full
-	printf("last read: %d bytes, data: 0x%04x\n", ret, *c); 
-	
-	heap* h = newHeap(elems);
-	
-	for (int i = 0;i<elems;i++) {
-		if (bytes[i] > 0) {
-			heapInsert(h, newHeapNode(i, bytes[i]));
-			printf("insert: %c, %d\n", i, bytes[i]); 
-		}
-	}
-	/*
-	for (int i = 0; i < h->count; i++) {
-		printf("%2d val: %d data: 0x%02x (%c)\n", i, h->nodes[i]->value, h->nodes[i]->data, h->nodes[i]->data);
-	}*/
-	
-	return h;
-}
-
-void emptyHeap(heap* h) {
-	heapNode* n;
-	
-	while ((n=heapDeleteMin(h))) {
-		printf("val: %2d   data: 0x%04x (%s)\n", n->value, n->data, (char*)&n->data);
-		free(n);
-	}
-}
-
 int main(int argc, char *argv[]) {
-	printf("args: %d\n", argc);
-	printf("arg1: %s\n", argv[1]);
-  FILE* cf = fopen(argv[1], "r");
-	readData(cf);
-	return 0;
-	
-  FILE* f = fopen("testdata", "r");
-  int s = 1;
-	uint32_t elems = 1 << s*8;
-  heap* h = loadheap(f, sizeof(uint8_t)*s);
-  uint32_t* codelens = calloc(elems, sizeof(uint32_t));
-  uint32_t* codes = huff(h, codelens);
-    
-  FILE* fw = fopen("compressed", "w");
-  writeData(f, fw, codes, codelens, sizeof(uint8_t)*s);
-	//emptyHeap(h);
+	if (argc != 3) {
+	printf("%d\n", argc);
+		printf("usage: %s x | c FILE\n  compresses or extracts FILE\n   x extract\n   c compress\n", argv[0]);
+		return 1;
+	}
 
+	char* c = argv[1];
+	
+	if (*c == 'x') {
+		FILE* cf = fopen(argv[2], "r");
+		readData(cf);
+		return 0;
+	} else if(*c == 'c') {
+		FILE* f = fopen(argv[2], "r");
+		int block = 1;
+		uint32_t elems = 1 << block*8;
+		
+		char* filen = calloc(strlen(argv[2])+4, sizeof(char));
+		strcpy(filen, argv[2]);
+		filen = strcat(filen, ".hff");
+		FILE* fw = fopen(filen, "w");
+		
+		heap* h = loadHeap(f, sizeof(uint8_t)*block);
+		huff(h);
+		uint32_t* codes = calloc(elems, sizeof(uint32_t));
+		uint8_t* codelens = calloc(elems, sizeof(uint8_t));
+		writeHeader(fw, h->nodes[0], block, codes, codelens);
+		writeData(f, fw, codes, codelens, block);
+		//uint32_t* codes = huff(h, codelens);
+			
+		//writeData(f, fw, codes, codelens, sizeof(uint8_t)*s);
+		//emptyHeap(h);
+	}
   return 0;
 }

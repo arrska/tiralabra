@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <stdio.h>
 #include <inttypes.h>
 
 #ifndef HEAP_H
@@ -32,4 +34,5 @@ heapNode* heapMin(heap* h);
 void heapInsert(heap* h, heapNode* nn);
 heapNode* newHeapNode(uint32_t data, uint32_t value);
 heap* newHeap(uint32_t size);
+void emptyHeap(heap* h);
 #endif

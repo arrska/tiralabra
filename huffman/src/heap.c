@@ -1,6 +1,3 @@
-#include <stdlib.h>
-#include <inttypes.h>
-
 #include "heap.h"
 
 heap* newHeap(uint32_t size) {
@@ -99,4 +96,13 @@ heapNode* rightChild(heap* h, uint32_t i) {
 	uint32_t c = (i+1)*2;
 	if (c >= h->count) return NULL;
 	return h->nodes[c];
+}
+
+void emptyHeap(heap* h) {
+	heapNode* n;
+	
+	while ((n=heapDeleteMin(h))) {
+		printf("val: %2d   data: 0x%04x (%s)\n", n->value, n->data, (char*)&n->data);
+		free(n);
+	}
 }

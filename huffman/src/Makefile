@@ -1,4 +1,4 @@
-SRC_FILES=main.c huff.c heap.c
+SRC_FILES=main.c huff.c heap.c stack.c
 
 all: main
 
