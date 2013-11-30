@@ -12,9 +12,9 @@ void huff(heap* h);
 //uint32_t* huff(heap* h, uint8_t* codelens);
 //heapNode* pickMin(heap* h1, heap* h2);
 //void writeData(FILE* origf, FILE* compf, uint32_t* codes, uint8_t* codelens, uint8_t block);
-void readData(FILE* compf);
+void decompress(FILE* compf, FILE* outfile);
 heap* loadHeap(FILE* file, uint8_t blockSize);
-void writeHeader(FILE* compf, heapNode* root, uint8_t block, uint32_t* codes, uint8_t* codelens);
+void writeHeader(FILE* compf, heapNode* root, uint8_t block, uint32_t* codes, uint8_t* codelens, long filesize);
 void writeData(FILE* origf, FILE* compf, uint32_t* codes, uint8_t* codelens, uint8_t block);
-void compress(FILE* origf, FILE* compf, heap* h, uint8_t block);
+void compress(FILE* origf, FILE* compf, uint8_t block);
 #endif

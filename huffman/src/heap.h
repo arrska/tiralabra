@@ -18,8 +18,6 @@ typedef struct heapnode {
 	uint32_t data;
 	uint32_t index;
 	
-	//uint8_t internal;
-	//used when building huffmantree
 	struct heapnode* left;
 	struct heapnode* right;
 } heapNode;
