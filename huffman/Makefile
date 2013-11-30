@@ -8,14 +8,14 @@ main:
 test:
 	$(MAKE) -C $(TEST_DIR)
 
-clean: clean clean-test
+clean: clean-main clean-test
 clean-main:
 	$(MAKE) -C $(MAIN_DIR) clean
 	
 clean-test:
 	$(MAKE) -C $(TEST_DIR) clean
 	
-run: run-test run-main
+run: run-main
 
 run-main:
 	$(MAKE) -C $(MAIN_DIR) run

@@ -7,21 +7,13 @@
 
 int main(int argc, char *argv[]) {
 	if (argc != 3 && argc != 4) {
-		uint8_t t = 'a';
-		
-		fwrite(&t, 1, 1, stdout);
-		t = 0x00;
-		fwrite(&t, 1, 1, stdout);
-		t = 'c';
-		fwrite(&t, 1, 1, stdout);
-		return 1;
-		printf("usage: %s x | c FILE [FILE2]\n  compresses or decompresses FILE\n   x decompress FILE and output to FILE2\n   c compress\n", argv[0]);
+		printf("usage: %s d | c FILE [FILE2]\n  compresses or decompresses FILE\n   d decompress FILE and output to FILE2\n   c compress FILE to FILE.hff\n", argv[0]);
 		return 1;
 	}
 
 	char* c = argv[1];
 	
-	if (*c == 'x') {
+	if (*c == 'd') {
 		FILE* cf = fopen(argv[2], "r");
 		FILE* outf;
 		if(argc == 4) {
@@ -29,6 +21,11 @@ int main(int argc, char *argv[]) {
 		} else {
 			outf = stdout;
 		}
+		
+		if (cf = NULL || outf == NULL) {
+			return 1;
+		}
+		
 		decompress(cf, outf);
 	} else if(*c == 'c') {
 		FILE* f = fopen(argv[2], "r");
@@ -38,6 +35,10 @@ int main(int argc, char *argv[]) {
 		strcpy(filen, argv[2]);
 		filen = strcat(filen, ".hff");
 		FILE* fw = fopen(filen, "w");
+		
+		if (f = NULL || fw == NULL) {
+			return 1;
+		}
 		
 		compress(f, fw, blocksize);
 	}
