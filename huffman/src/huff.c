@@ -122,16 +122,17 @@ void writeData(FILE* origf, FILE* compf, uint32_t* codes, uint8_t* codelens, uin
 	while (ret == blocksize) {
 		ret = fread(&blk, blocksize, 1, origf);
 		
-		if (bits > 8) {
+		bits += codelens[blk];
+		b=b|(codes[blk]<<(32-bits));
+		
+		while (bits >= 8) {
 			tmpbyte = b>>24;
 			fwrite(&tmpbyte, 1, 1, compf);
 			b<<=8;
 			bits-=8;
 		}
-		
-		bits += codelens[blk];
-		b=b|(codes[blk]<<(32-bits));
 		//printf("buffer: 0x%02x, bits: %d\n", b, bits);
+		//printf("bits: %d\n", bits);
 	}
 	
 	while (bits > 0) {
@@ -192,15 +193,14 @@ void decompress(FILE* compf, FILE* outfile) {
 	uint32_t bb = 0;
 	uint8_t byteb = 0;
 	int bits=0;
-	int ret = 1;
+	int ret;
 	
 	pos = 0;
+	ret = fread(&byteb, 1, sizeof(uint8_t), compf);
 	while (ret && filesize>0) {
-		ret = fread(&byteb, 1, sizeof(uint8_t), compf);
 		bb=byteb<<24 | bb>>8;
 		
 		bits+=8;
-		//pos=0;
 		
 		while (bits>0 && filesize>0) {
 			//deal one bit (leftmost)
@@ -217,12 +217,16 @@ void decompress(FILE* compf, FILE* outfile) {
 				//printf("%c", h->nodes[pos]->data);
 				fwrite(&h->nodes[pos]->data, blocksize, 1, outfile);
 				//fprintf(stdout, "%c", h->nodes[pos]->data);
-				fprintf(stderr, "%ld\n", filesize);
+				//fprintf(stderr, "%ld\n", filesize);
 				pos = 0;
 				filesize--;
 			}
 		}
+		ret = fread(&byteb, 1, sizeof(uint8_t), compf);
 	}
+	
+	free(h);
+	free(codelens);
 }
 
 

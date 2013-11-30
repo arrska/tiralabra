@@ -3,7 +3,7 @@
 heap* newHeap(uint32_t size) {
 	heap* h = malloc(sizeof(heap));
 	h->size = size;
-	h->nodes = malloc(sizeof(heapNode*)*size);
+	h->nodes = calloc(size, sizeof(heapNode*));
 	h->count = 0;
 	
 	return h;

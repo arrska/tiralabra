@@ -7,11 +7,11 @@ newhash=$(md5sum $1.test)
 
 echo original file:
 echo $orighash
-$(which ls) -l ab.txt | cut -d' ' -f5
+$(which ls) -l $1 | cut -d' ' -f5
 
 echo new file:
 echo $newhash
-$(which ls) -l ab.txt.test | cut -d' ' -f5
+$(which ls) -l $1.test | cut -d' ' -f5
 
 
 rm $1.hff

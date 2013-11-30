@@ -7,7 +7,14 @@
 
 int main(int argc, char *argv[]) {
 	if (argc != 3 && argc != 4) {
-	printf("%d\n", argc);
+		uint8_t t = 'a';
+		
+		fwrite(&t, 1, 1, stdout);
+		t = 0x00;
+		fwrite(&t, 1, 1, stdout);
+		t = 'c';
+		fwrite(&t, 1, 1, stdout);
+		return 1;
 		printf("usage: %s x | c FILE [FILE2]\n  compresses or decompresses FILE\n   x decompress FILE and output to FILE2\n   c compress\n", argv[0]);
 		return 1;
 	}
