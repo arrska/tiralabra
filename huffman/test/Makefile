@@ -8,6 +8,6 @@ test: $(SRC_FILES)
 clean:
 	rm -rf test
 
-run: test
+run:
 	./test
 

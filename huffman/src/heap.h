@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include <inttypes.h>
 
 #ifndef HEAP_H
@@ -25,12 +24,11 @@ typedef struct heapnode {
 heapNode* rightChild(heap* h, uint32_t i);
 heapNode* leftChild(heap* h, uint32_t i);
 heapNode* parentNode(heap* h, uint32_t i);
-void swap(heap* h, heapNode* n1, heapNode* n2);
-void heapify(heap* h, uint32_t i);
+int swap(heap* h, heapNode* n1, heapNode* n2);
+int heapify(heap* h, uint32_t i);
 heapNode* heapDeleteMin(heap* h);
 heapNode* heapMin(heap* h);
-void heapInsert(heap* h, heapNode* nn);
+int heapInsert(heap* h, heapNode* nn);
 heapNode* newHeapNode(uint32_t data, uint32_t value);
 heap* newHeap(uint32_t size);
-void emptyHeap(heap* h);
 #endif
