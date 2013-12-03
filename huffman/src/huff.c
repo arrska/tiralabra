@@ -158,16 +158,15 @@ void decompress(FILE* compf, FILE* outfile) {
 	uint32_t leaves;
 	fread(&leaves, sizeof(uint32_t), 1, compf);
 	
-	
 	int elems = 1<<blocksize*8;
 	uint32_t* codes = calloc(elems, sizeof(uint32_t));
 	uint8_t* codelens = calloc(elems, sizeof(uint8_t));
 	uint32_t blk = 0;
 	uint32_t tmp=0;
-	uint32_t pos=0;
 	
-	//TODO: fix this (build real tree)
-	heap* h = newHeap(elems*elems);
+	//root of the tree
+	heapNode* root = malloc(sizeof(heapNode));
+	heapNode* tmpNode;
 	
 	while (leaves>0) {
 		fread(&blk, blocksize, 1, compf);
@@ -176,15 +175,30 @@ void decompress(FILE* compf, FILE* outfile) {
 	
 		heapNode* n = newHeapNode(blk, codes[blk]);
 		tmp = codes[blk];
-		pos=0;
-		for (int i=1;i<=codelens[blk];i++) {
+		//pos=0;
+		tmpNode = root;
+		for (int i=1;i<codelens[blk];i++) {
 			if (tmp>>(codelens[blk]-i) & 1) {
-				pos = (pos+1)*2;
+				//drop to right and create parent, if doesnt exist
+				if (tmpNode->right == NULL) {
+					tmpNode->right = malloc(sizeof(heapNode));
+				}
+				tmpNode = tmpNode->right;
 			} else {
-				pos = (pos+1)*2-1;
+				//drop left
+				if (tmpNode->left == NULL) {
+					tmpNode->left = malloc(sizeof(heapNode));
+				}
+				tmpNode = tmpNode->left;
 			}
 		}
-		h->nodes[pos] = n;
+		//last rightmost bit decides the side
+		if (tmp & 1) {
+			tmpNode->right=n;
+		} else {
+			tmpNode->left=n;
+		}
+		
 		//fprintf(stderr, "block: %1$x (%1$c), code: 0x%2$02x, len %3$d, pos: %4$d\n", blk, codes[blk], codelens[blk], pos);
 		leaves--;
 	}
@@ -195,7 +209,7 @@ void decompress(FILE* compf, FILE* outfile) {
 	int bits=0;
 	int ret;
 	
-	pos = 0;
+	tmpNode = root;
 	ret = fread(&byteb, 1, sizeof(uint8_t), compf);
 	while (ret && filesize>0) {
 		bb=byteb<<24 | bb>>8;
@@ -205,27 +219,28 @@ void decompress(FILE* compf, FILE* outfile) {
 		while (bits>0 && filesize>0) {
 			//deal one bit (leftmost)
 			if (0x80000000 & bb) {
-				pos = (pos+1)*2;
+				//go right
+				tmpNode = tmpNode->right;
 			} else {
-				pos = (pos+1)*2-1;
+				//go left
+				tmpNode = tmpNode->left;
 			}
 			bb<<=1;
 			bits--;
 			
 			//if is leaf
-			if (h->nodes[pos] != NULL) {
+			if (tmpNode->right == NULL && tmpNode->left == NULL) {
 				//printf("%c", h->nodes[pos]->data);
-				fwrite(&h->nodes[pos]->data, blocksize, 1, outfile);
+				fwrite(&tmpNode->data, blocksize, 1, outfile);
 				//fprintf(stdout, "%c", h->nodes[pos]->data);
 				//fprintf(stderr, "%ld\n", filesize);
-				pos = 0;
+				tmpNode = root;
 				filesize--;
 			}
 		}
 		ret = fread(&byteb, 1, sizeof(uint8_t), compf);
 	}
 	
-	free(h);
 	free(codelens);
 }
 
