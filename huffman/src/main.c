@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 			outf = stdout;
 		}
 		
-		if (cf = NULL || outf == NULL) {
+		if (cf == NULL || outf == NULL) {
 			return 1;
 		}
 		
@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
 		filen = strcat(filen, ".hff");
 		FILE* fw = fopen(filen, "w");
 		
-		if (f = NULL || fw == NULL) {
+		if (f == NULL || fw == NULL) {
 			return 1;
 		}
 		

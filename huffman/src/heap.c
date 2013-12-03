@@ -34,6 +34,7 @@ void heapInsert(heap* h, heapNode* nn) {
 }
 
 heapNode* heapMin(heap* h) {
+	if (h == NULL || h->count == 0) return NULL;
 	return h->nodes[0];
 }
 

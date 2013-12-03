@@ -22,14 +22,15 @@ static char * test_new_heap_node() {
 	mu_assert("new heapNode should have data ser", n->data == 0xAB);
 	mu_assert("new heapNode should have value set", n->value == 10);
 	mu_assert("new heapNode should have index of -1", n->index == -1);
+	mu_assert("new heapNode should not have left child -pointer set. its only for tree mode", n->left == NULL);
+	mu_assert("new heapNode should not have right child -pointer set. its only for tree mode", n->right == NULL);
 	free(n);
 	return 0;
 }
 
 static char* test_heapInsert_and_heapMin_with_one_node() {
-	heap* h;
+	heap* h = newHeap(1);
 	heapNode* n = newHeapNode(0x01, 123);
-	h=newHeap(1);
 	heapInsert(h, n);
 	
 	mu_assert("first element of nodearray should be the only node inserted to heap", h->nodes[0]==n);
@@ -57,17 +58,16 @@ static char* test_heapDeleteMin() {
 	mu_assert("heap count should match the number of elements in heap (4)", h->count==heapsize);
 	
 	heapNode* n2;
-	n2=heapMin(h);
-	n=heapDeleteMin(h);
-	int lastValue=n->value;
+	n2 = heapMin(h);
+	n = heapDeleteMin(h);
+	int lastValue;
 	while (n!=NULL) {
-		heapsize--;
-		mu_assert("heapMin and heapDeleteMin should always return the same node when called consecutively", n==n2);
-	
-		n2=heapMin(h);
-		n=heapDeleteMin(h);
 		mu_assert("when emptying heap with heapDeleteMin-calls, nodes should be returned in ascending order", n->value >= lastValue);
-		lastValue=n->value;
+		lastValue = n->value;
+		n2 = heapMin(h);
+		n = heapDeleteMin(h);
+		mu_assert("heapMin and heapDeleteMin should always return the same node when called consecutively", n==n2);
+		heapsize--;
 	}
 	mu_assert("heap should only give as much nodes as it contains", heapsize==0);
 	
@@ -113,16 +113,15 @@ static char * all_tests() {
  
 int main(int argc, char **argv) {
 	char *result = all_tests();
-	printf("Heap tests: ");
-	printf("===========================");
+	printf("== Heap tests ==\n");
+	
+	printf("Tests passed: %d/%d\n\n", tests_passed, tests_run);
 	
 	if (result != 0) {
 		printf("%s\n", result);
-	}
-	else {
+	} else {
 		printf("ALL TESTS PASSED\n");
 	}
-	printf("Tests passed: %d/%d\n", tests_passed, tests_run);
 
 	return result != 0;
 }
