@@ -57,9 +57,11 @@ void writeHeader(FILE* compf, heapNode* root, uint8_t blocksize, uint32_t* codes
 	//blocksize
 	fwrite(&blocksize, sizeof(uint8_t), 1, compf);
 	
-	//reserve space for filesize and leaf count
+	//write filesize
 	uint32_t leaves = 0;
 	fwrite(&filesize, sizeof(long), 1, compf);
+	
+	//reserve space for leaf count
 	long loffs = ftell(compf);
 	fwrite(&leaves, sizeof(uint32_t), 1, compf);
 	
@@ -104,7 +106,7 @@ void writeHeader(FILE* compf, heapNode* root, uint8_t blocksize, uint32_t* codes
 		}
 	}
 	
-	//write filesize and leaf count
+	//write leaf count
 	fseek(compf, loffs, SEEK_SET);
 	fwrite(&leaves, sizeof(uint32_t), 1, compf);
 	fseek(compf, 0, SEEK_END);
