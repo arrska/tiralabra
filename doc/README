@@ -1,0 +1,40 @@
+Kääntäminen
+===========
+
+Ohjelman saa käännettyä ajamalla komennon
+
+make main
+
+kansiossa huffman, jossa sijaitsevat src- ja test-kansiot. Tällöin syntyy tiedosto huffman, joka on itse suoritettava ohjelma.
+
+Testien kääntämisen voi suorittaa komennolla
+
+make test
+
+kansiossa huffman. Tällöin syntyy tiedosto test kansioon test, joka on testit suorittava ohjelma.
+
+Komennolla 'make all' kansiossa huffman saa käännettyä ohjelman ja testit sekä ajettua testit.
+
+Suorittaminen
+=============
+
+Ohjelman suorittaminen toimii komennolla ./huffman. Ilman argumentteja ja virheellisillä argumenteilla suoritettaessa tulostuu käyttöohje.
+Tiedoston pakkaaminen tehdään komennolla
+
+./huffman c pakattava_tiedosto kohdetiedosto
+
+Tiedoston purkaminen tehdään komennolla
+
+./huffman d pakattu_tiedosto kohdetiedosto
+
+kohdetiedosto on kummassakin tapauksessa valinnainen, oletuksena data kirjoitetaan standard outputtiin. Tiedostojen nimissä ei saa olla välilyöntejä.
+
+Testit
+======
+
+Testien suorittaminen tehdään komennolla ./test kansiossa test. Tällöin ajetaan itse huffman-koodaukseen liittyvät testit sekä aputietorakenteisiin, kekoon ja pinoon liittyvät testit.
+
+Muuta
+=====
+
+Komennolla make clean voi poistaa kaikki väliaikaistiedostot kansiosta test/testfiles/temp ja käännetyt tiedostot huffman ja test/test.

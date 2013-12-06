@@ -91,8 +91,6 @@ int main(int argc, char **argv) {
 		printf("ALL STACK TESTS PASSED\n\n");
 	}
 	
-	return 0;
-	
 	char *heap_result;
 	tests_passed = 0;
 	asserts_ok = 0;
@@ -108,7 +106,7 @@ int main(int argc, char **argv) {
 		printf("%s\n\n", heap_result);
 		printf("!!! ERROR ON HEAP TESTS !!!\n\n");
 	} else {
-		printf("HEAP TESTS PASSED\n\n");
+		printf("ALL HEAP TESTS PASSED\n\n");
 	}
 	
 
