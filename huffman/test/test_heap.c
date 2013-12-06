@@ -251,7 +251,7 @@ static char* test_swap() {
 
 //heap big test, random
 
-static char * test_insert_efficiency() {
+static char * test_insert_performance() {
 	int items = 100000;
 	heap* h;
 	heapNode* n;
@@ -271,7 +271,7 @@ static char * test_insert_efficiency() {
 		
 		gettimeofday(&starttime, NULL);
 		for (int k = 0; k < 1000; k++) {
-			n=newHeapNode(1, rand());
+			n=newHeapNode(1, 2);
 			heapInsert(h, n);
 		}
 		gettimeofday(&stoptime, NULL);
@@ -313,7 +313,7 @@ static char * all_tests() {
 	mu_run_test(test_swap);
 	mu_run_test(test_invalid_arguments);
 	
-	mu_run_test(test_insert_efficiency);
+	mu_run_test(test_insert_performance);
 	return 0;
 }
  
