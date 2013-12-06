@@ -13,7 +13,7 @@ typedef struct stackelem {
 	uint8_t codelen;
 } stack;
 
-struct stackelem* newStackElem(void* ptr);
+struct stackelem* newStackElem(heapNode* ptr);
 void stackPush(stack* s, struct stackelem* e);
 struct stackelem* stackPop(stack* s);
 

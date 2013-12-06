@@ -2,13 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "minunit.h"
-#include "../src/heap.h"
+#include "test_heap.h"
 
-int tests_passed = 0;
-int asserts_ok = 0;
+int tests_passed;
+int asserts_ok;
 
-static char * test_new_empty_heap() {
+char* test_new_empty_heap() {
 	uint32_t heapsize = 1;
 	heap* h;
 	h=newHeap(heapsize);
@@ -20,7 +19,7 @@ static char * test_new_empty_heap() {
 	free(h);
 	return 0;
 }
-static char * test_new_heap_node() {
+char* test_new_heap_node() {
 	heapNode* n = newHeapNode(0xAB, 10);
 	mu_assert("newHeapNode should not return a NULL pointer", n != NULL);
 	mu_assert("new heapNode should have data ser", n->data == 0xAB);
@@ -32,7 +31,7 @@ static char * test_new_heap_node() {
 	return 0;
 }
 
-static char* test_heapInsert_and_heapMin_with_one_node() {
+char* test_heapInsert_and_heapMin_with_one_node() {
 	heap* h = newHeap(1);
 	heapNode* n = newHeapNode(0x01, 123);
 	heapInsert(h, n);
@@ -54,7 +53,7 @@ static char* test_heapInsert_and_heapMin_with_one_node() {
 }
 
 
-static char* test_heapDeleteMin() {
+char* test_heapDeleteMin() {
 	heap* h;
 	int heapsize = 4;
 	h=newHeap(heapsize);
@@ -92,7 +91,7 @@ static char* test_heapDeleteMin() {
 	return 0;
 }
 
-static char * test_heapify() {
+char* test_heapify() {
 	heap* h = newHeap(5);
 	heapNode* n1 = newHeapNode(1, 1);
 	heapNode* n2 = newHeapNode(2, 2);
@@ -155,7 +154,7 @@ it should be like this: \n\
 	 return 0;
 }
 
-static char * test_null_and_zero_arguments() {
+char* test_null_and_zero_arguments() {
 	heap* h = newHeap(0);
 	mu_assert("newHeap-call with 0 size should return a valid pointer to heap with nodes pointer being NULL", h != NULL);
 	mu_assert("newHeap(0)-call should return pointer to heap with nodes pointer being NULL", h->nodes==NULL);
@@ -191,7 +190,7 @@ static char * test_null_and_zero_arguments() {
 	return 0;
 }
 
-static char* test_invalid_arguments() {
+char* test_invalid_arguments() {
 	heap* h = newHeap(2);
 	heapNode* n1 = newHeapNode(1, 1);
 	heapNode* n2 = newHeapNode(2, 2);
@@ -218,7 +217,7 @@ static char* test_invalid_arguments() {
 	return 0;
 }
 
-static char* test_swap() {
+char* test_swap() {
 	heap* h = newHeap(2);
 	heapNode* n1 = newHeapNode(1, 1);
 	heapNode* n2 = newHeapNode(2, 2);
@@ -249,36 +248,35 @@ static char* test_swap() {
 }
 
 
-//heap big test, random
-
-static char * test_insert_performance() {
+char* test_insert_performance() {
 	int items = 100000;
+	int inserts = 1000;
+	int tests=4;
 	heap* h;
 	heapNode* n;
 	
     struct timeval starttime, stoptime;
 	
-	unsigned long test_time[4];
+	unsigned long test_time[tests];
 	
-	for (int j = 0; j < 4; j++) {
-		h = newHeap(items);
+	for (int j = 0; j < tests; j++) {
+		h = newHeap(items+inserts);
 	
-		for (int i = 0; i < items-1000; i++) {
-			n=newHeapNode(1, rand());
+		for (int i = 0; i < items; i++) {
+			n=newHeapNode(1, i%200+tests);
 			heapInsert(h, n);
 		}
 		
 		
 		gettimeofday(&starttime, NULL);
-		for (int k = 0; k < 1000; k++) {
-			n=newHeapNode(1, 2);
+		for (int k = 0; k < inserts; k++) {
+			n=newHeapNode(1, k%tests);
 			heapInsert(h, n);
 		}
 		gettimeofday(&stoptime, NULL);
 		
 		
-		for (int i = 0; i < items; i++) {
-			if (i<5)printf("value: %d\n", h->nodes[i]->value);
+		for (int i = 0; i < items+inserts; i++) {
 			free(h->nodes[i]);
 		}
 		free(h->nodes);
@@ -286,49 +284,91 @@ static char * test_insert_performance() {
 		
 		test_time[j] = stoptime.tv_usec-starttime.tv_usec;
 		
-		printf("nodes in tree: %d \n", items);
-		printf("time: %lu\n", test_time[j]);
-		//printf("time/insert: %d\n\n", tests[j]*1000/items);
+		//printf("nodes in tree: %d, inserts: %d \n", items, inserts);
+		//printf("time: %lu\n\n", test_time[j]);
 		items*=10;
 	}
 	
-	return 0;
-}
-
-//heap test time n log n
-
-/*
-static char * test_ifail() {
-	mu_assert("im supposed to fail", 0);
-	return 0;
-}*/
-
-static char * all_tests() {
-	mu_run_test(test_new_empty_heap);
-	mu_run_test(test_new_heap_node);
-	mu_run_test(test_heapDeleteMin);
-	mu_run_test(test_heapInsert_and_heapMin_with_one_node);
-	mu_run_test(test_null_and_zero_arguments);
-	mu_run_test(test_heapify);
-	mu_run_test(test_swap);
-	mu_run_test(test_invalid_arguments);
-	
-	mu_run_test(test_insert_performance);
-	return 0;
-}
- 
-int main(int argc, char **argv) {
-	char *result = all_tests();
-	printf("== Heap tests ==\n");
-	
-	printf("Tests passed: %d\n\n", tests_passed);
-	printf("Assertions passed: %d\n\n", asserts_ok);
-	
-	if (result != 0) {
-		printf("%s\n", result);
-	} else {
-		printf("ALL TESTS PASSED\n");
+	for(int i=0;i<tests-1;i++) {
+		//allow margin of 1
+		mu_assert("inserting elements into small heap should be about faster than inserting them into big heap", test_time[i] <= test_time[i+1]+1);
+		//printf("time1: %lu, time1: %lu, time2/time1: %lf\n", test_time[i], test_time[i+1], (double)test_time[i+1]/(double)test_time[i]);
+		mu_assert("inserting elements into big heap should be not be n times slower than inserting them into n times smaller heap", (double)test_time[i+1]/(double)test_time[i]<2);
 	}
+	
+	return 0;
+}
 
-	return result != 0;
+char* test_delete_performance() {
+	int items = 100000;
+	int deletes = 1000;
+	int tests=4;
+	heap* h;
+	heapNode* n;
+	
+    struct timeval starttime, stoptime;
+	
+	unsigned long test_time[tests];
+	
+	for (int j = 0; j < tests; j++) {
+		h = newHeap(items+deletes);
+	
+		for (int i = 0; i < items; i++) {
+			n=newHeapNode(1, i%200+tests);
+			heapInsert(h, n);
+		}
+		
+		
+		gettimeofday(&starttime, NULL);
+		for (int k = 0; k < deletes; k++) {
+			n=heapDeleteMin(h);
+		}
+		gettimeofday(&stoptime, NULL);
+		
+		
+		for (int i = 0; i < items+deletes; i++) {
+			free(h->nodes[i]);
+		}
+		free(h->nodes);
+		free(h);
+		
+		test_time[j] = stoptime.tv_usec-starttime.tv_usec;
+		
+		//printf("nodes in tree: %d, deletions: %d \n", items, deletes);
+		//printf("time: %lu\n\n", test_time[j]);
+		items*=10;
+	}
+	
+	for(int i=0;i<tests-1;i++) {
+		mu_assert("deleting elements from small heap should be about faster than deleteing them from big heap", test_time[i] <= test_time[i+1]);
+		//printf("time1: %lu, time1: %lu, time2/time1: %lf\n", test_time[i], test_time[i+1], (double)test_time[i+1]/(double)test_time[i]);
+		mu_assert("deleteing elements from big heap should be not be n times slower than deleting them from n times smaller heap", (double)test_time[i+1]/(double)test_time[i]<2);
+	}
+	
+	return 0;
+}
+
+char* test_heap_sort() {
+	int items = 10000;
+	heap* h = newHeap(items);
+	heapNode* n;
+	
+	for (int i = 0; i < items; i++) {
+		n = newHeapNode(1, rand());
+		heapInsert(h, n);
+	}
+	
+	
+	uint32_t last = 0;
+	while (h->count>0) {
+		n = heapDeleteMin(h);
+		mu_assert("heap should return elements in right order", last <= n->value);
+		last = n->value;
+		free(n);
+	}
+	
+	free(h->nodes);
+	free(h);
+	
+	return 0;
 }

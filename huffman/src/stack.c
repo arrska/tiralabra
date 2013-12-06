@@ -13,7 +13,7 @@ void stackPush(stack* s, struct stackelem* e) {
 	s->next = e;
 }
 
-struct stackelem* newStackElem(void* ptr) {
+struct stackelem* newStackElem(heapNode* ptr) {
 	struct stackelem* e = malloc(sizeof(struct stackelem));
 	e->this = ptr;
 	e->code=0;

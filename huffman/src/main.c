@@ -32,7 +32,6 @@ int main(int argc, char *argv[]) {
 		decompress(cf, outf);
 	} else if(*argv[1] == 'c') {
 		FILE* origf = fopen(argv[2], "r");
-		int blocksize = 1;
 		
 		FILE* outf;
 		if(argc == 4) {
@@ -46,7 +45,7 @@ int main(int argc, char *argv[]) {
 			return 1;
 		}
 		
-		compress(origf, outf, blocksize);
+		compress(origf, outf);
 	} else {
 		print_help(argv[0]);
 		return 1;

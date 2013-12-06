@@ -3,28 +3,28 @@
 
 Datan pakkaaminen Huffmanin koodauksella
 
-Huffman-koodaus on tiedon pakkaamiseen käytettävä algoritmi. Algoritmin idea on kartoittaa aakkoston eri eymbolien esiintymistaajuudet ja koodata jokainen symboli mahdollisimman lyhyellä bittijonolla siten, että eniten käytetty symboli saa lyhyimmän bitti-ilmauksen ja vähiten käytetty pisimmän.
+Huffman-koodaus on tiedon pakkaamiseen käytettävä algoritmi. Algoritmin idea on kartoittaa aakkoston eri merkkien esiintymisfrekvenssit ja koodata jokainen merkki mahdollisimman lyhyellä bittijonolla siten, että eniten käytetty merkki saa lyhyimmän bitti-ilmauksen ja vähiten käytetty pisimmän.
 
 Algoritmin yksityiskohdat
-Pakkauksen ensimmäinen askel on pakattavan datan aakkoston symbolien esiintymistaajuuksien selvittäminen. Tämä vaatii symbolien esiintymien laskemisen datasta, siis koko pakattavan datan läpikäynnin. Tämän jälkeen rakennetaan Huffman-puu. Käsitellään aluksi jokaista symbolia puun lehtenä, jonka arvona on sen esiintymistiheys. Valitaan ensin kaksi harvinaisinta symbolia, eli pienimmät arvot omaavaa lehteä, ja tehdään niille emosolmu, jonka arvoksi tulee lastensa arvojen summa. Luotua solmua kohdellaan samoin kuin alkuperäisiä solmuja. Lapsiksi alennetut solmut eivät enää ole käsittelyssämme. Jatkamme samaa poimien aina kaksi pienimmät arvot omaavaa solmua ja luomalla niille emon, kunnes jäljellä on vain yksi solmu, jonka arvo on kaikkien symbolien esiintymistiheyksien summa eli 1. Tuloksena on puu, jonka lehtisolmuina ovat kaikki aakkoston symbolit.
+Pakkauksen ensimmäinen askel on pakattavan datan aakkoston merkkien esiintymisfrekvenssien selvittäminen. Tämä vaatii merkkien esiintymien laskemisen datasta, siis koko pakattavan datan läpikäynnin. Tämän jälkeen rakennetaan Huffman-puu. Aluksi jokaista merkkiä käsitellään puun lehtenä, jonka arvona on sen esiintymisfrekvenssi. Valitaan ensin kaksi harvinaisinta merkkiä, eli pienimmät arvot omaavaa lehteä, ja tehdään niille emosolmu, jonka arvoksi tulee lastensa arvojen summa. Luotua solmua kohdellaan samoin kuin alkuperäisiä solmuja. Lapsiksi alennetut solmut eivät enää ole käsiteltävien solmujen listassa. Jatkamme samaa poimien aina kaksi pienimmät arvot omaavaa solmua ja luomalla niille emon, kunnes jäljellä on vain yksi solmu, jonka arvo on kaikkien merkkien esiintymistiheyksien summa eli 1. Tuloksena on puu, jonka lehtisolmuina ovat kaikki aakkoston merkit.
 
-Symbolien koodaus on on bittijono, joka saadaan kulkemalla juuresta solmuun. Kuljettaessa aina oikealle lisätään bittisekvenssiin 1 ja vasemmalle 0. Tällöin solmuun päästessä ollaan saatu bittijono, joka kertoo symbolin bittiesityksen pakatussa datassa. Itse pakkaaminen tehdään käymällä data läpi symboli kerrallaan ja kirjoittamalla aina symbolia vastaava
+Merkkien koodaus on on bittijono, joka saadaan kulkemalla juuresta solmuun. Kuljettaessa aina oikealle lisätään bittijonoon 1 ja vasemmalle 0. Tällöin solmuun päästessä ollaan saatu bittijono, joka kertoo merkin bittiesityksen pakatussa datassa. Itse pakkaaminen tehdään käymällä data läpi merkki kerrallaan ja kirjoittamalla aina merkin koodaus tiedostoon.
 
-Näin pakatun datan purkaminen käy rekonstruoimalla puu ja lukemalla pakattua dataa bitti kerrallaan. Lähtemällä liikkeelle juuresta ja valitsemalla aina luetun bitin mukainen siirtymä, eli 1-bitillä oikea ja 0-bitillä vasen, löydetään lehti, jossa on etsimämme symboli. Lehteen päästäessä tulostetaan löydetty symboli, siirrytään takaisin juurisolmuun ja jatketaan datan lukemista.
+Näin pakatun datan purkaminen käy rekonstruoimalla puu ja lukemalla pakattua dataa bitti kerrallaan. Lähtemällä liikkeelle juuresta ja valitsemalla aina luetun bitin mukainen siirtymä, eli 1-bitillä oikea ja 0-bitillä vasen, löydetään lehti, jossa on etsimämme merkki. Lehteen päästäessä tulostetaan löydetty merkki, siirrytään takaisin juurisolmuun ja jatketaan datan lukemista.
 
 
 Tehokkuus
 Koodauksen voi jakaa helposti vaiheisiin
-1. Lue datan aakkosto ja laske symbolien taajuudet
+1. Lue datan aakkosto ja laske merkkien esiintymisfrekvenssit
 2. Rakenna Huffman-puu
-3. Etsi kunkin symbolin bittiesitys puusta
+3. Etsi kunkin merkin bittiesitys puusta
 4. Pakkaa data
 
 n = tiedoston koko
 k = aakkoston koko
 
 
-Ensimmäisen kohdan aikavaativuus on O(n), koska koko data käydään kertaalleen läpi ja jokaisen luetun symbolin kohdalla kasvatetaan sen laskuria yhdellä. Oletuksena, että merkistö on ennalta tiedossa (esim. aakkoset tai tavut) ja tietorakenne, jossa lukumäärät muistataan on valmiiksi rakennettu ja sen alkioiden arvojen muuttaminen tapahtuu vakioajassa. Käytännössä toteutus voi olla yksinkertainen taulukko, jossa on jokaiselle merkille alkio, jonka arvo on 0. Taulukon alustamiseen menee aakkoston koon verran aikaa. Vaiheen tilavaativuus on O(k) olettaen, että datasta on muistissa kerrallaan vain yksi merkki.
+Ensimmäisen kohdan aikavaativuus on O(n), koska koko data käydään kertaalleen läpi ja jokaisen luetun merkin kohdalla kasvatetaan sen laskuria yhdellä. Oletuksena, että merkistö on ennalta tiedossa (esim. aakkoset tai tavut) ja tietorakenne, jossa lukumäärät muistataan on valmiiksi rakennettu ja sen alkioiden arvojen muuttaminen tapahtuu vakioajassa. Käytännössä toteutus voi olla yksinkertainen taulukko, jossa on jokaiselle merkille alkio, jonka arvo on 0. Taulukon alustamiseen menee aakkoston koon verran aikaa. Vaiheen tilavaativuus on O(k) olettaen, että datasta on muistissa kerrallaan vain yksi merkki.
 
 Pseudokoodiesitys:
 

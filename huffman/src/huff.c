@@ -1,41 +1,40 @@
 #include "huff.h"
 
-//reads file block by block, counts frequencies and builds heap
-heap* loadHeap(FILE* file, uint8_t blocksize) {
+//reads file block by block and counts frequencies
+uint32_t* read_bytes(FILE* file) {
 	if (file == NULL)
 		return NULL;
 	
-	if (blocksize <= 0 || blocksize > sizeof(uint32_t))
-		return NULL;
+	uint32_t* bytes = calloc(256, sizeof(uint32_t));
+	uint8_t c = 0;
 	
-	uint32_t elems = 1 << blocksize*8;
-	//hash table maybe? at least for bigger blocks
-	uint32_t* bytes = calloc(elems, sizeof(uint32_t));
-	uint32_t* c = calloc(blocksize, sizeof(uint8_t));
+	int ret = 1;
 	
-	int ret = blocksize;
-	
-	bytes[*c]--;
-	while (ret == blocksize) {
-		bytes[*c]++;
-		*c = 0;
-		ret = fread(c, blocksize, 1, file);
+	bytes[c]--;
+	while (ret == 1) {
+		bytes[c]++;
+		c = 0;
+		ret = fread(&c, 1, 1, file);
 	}
-	//do something with last block if not full
-	printf("last read: %d bytes, data: 0x%04x\n", ret, *c); 
 	
-	heap* h = newHeap(elems);
+	return bytes;
+}
+
+//build heap from byte frequencies
+heap* load_heap(uint32_t* bytes) {
+	heap* h = newHeap(256);
 	
-	for (int i = 0;i<elems;i++) {
+	for (int i = 0;i<256;i++) {
 		if (bytes[i] > 0) {
 			heapInsert(h, newHeapNode(i, bytes[i]));
-			printf("insert: %c, %d\n", i, bytes[i]); 
+			//printf("insert: %c, %d\n", i, bytes[i]);
 		}
 	}
 	return h;
 }
 
-void huff(heap* h) {
+//build huffman tree from byteheap
+heapNode* build_huffman_tree(heap* h) {
 	heapNode* l;
 	heapNode* r;
 	heapNode* nn;
@@ -50,214 +49,240 @@ void huff(heap* h) {
 		
 		heapInsert(h, nn);
 	}
+	
+	return heapDeleteMin(h);
 }
 
-//writes huffman tree into file
-void writeHeader(FILE* compf, heapNode* root, uint8_t blocksize, uint32_t* codes, uint8_t* codelens, long filesize) {
-	//blocksize
-	fwrite(&blocksize, sizeof(uint8_t), 1, compf);
-	
-	//write filesize
-	uint32_t leaves = 0;
-	fwrite(&filesize, sizeof(long), 1, compf);
-	
-	//reserve space for leaf count
-	long loffs = ftell(compf);
-	fwrite(&leaves, sizeof(uint32_t), 1, compf);
-	
-	//dfs
+//traverse tree to find codes
+void huffman_codes(heapNode* root, uint32_t* codes, uint8_t* codelens) {
 	stack* s = malloc(sizeof(stack));
 	struct stackelem* e = newStackElem(root);
 	struct stackelem* r;
 	struct stackelem* l;
 	
-	stackPush(s, e);
+	//dfs
 	heapNode* n;
 	
-	while ( (e = stackPop(s)) ) {
+	while ( e != NULL ) {
 		n = e->this;
 		
 		if (n->left == NULL && n->right == NULL) {
 			codes[n->data] = e->code;
 			codelens[n->data] = e->codelen;
 			printf("data: 0x%04x (%c), code: 0x%04x, codelen: %d\n", n->data, n->data, e->code, e->codelen);
-			//write data to file
-			fwrite(&n->data, blocksize, 1, compf);
-			//write code to file
-			fwrite(&e->codelen, sizeof(uint8_t), 1, compf);
-			fwrite(&e->code, sizeof(uint32_t), 1, compf);
 			free(e);
-			leaves++;
-			continue;
+		} else {
+			if (n->right) {
+				r = newStackElem(n->right);
+				r->code = (e->code << 1) | 1;
+				r->codelen = e->codelen+1;
+				stackPush(s, r);
+			}
+			
+			if (n->left) {
+				l = newStackElem(n->left);
+				l->code = (e->code << 1);
+				l->codelen = e->codelen+1;
+				stackPush(s, l);
+			}
 		}
-		
-		if (n->right) {
-			r = newStackElem(n->right);
-			r->code = (e->code << 1) | 1;
-			r->codelen = e->codelen+1;
-			stackPush(s, r);
-		}
-		
-		if (n->left) {
-			l = newStackElem(n->left);
-			l->code = (e->code << 1);
-			l->codelen = e->codelen+1;
-			stackPush(s, l);
+		e = stackPop(s);
+	}
+}
+
+//write codes for symbols into file header
+void write_header(FILE* compf, uint32_t* codes, uint8_t* codelens, long filesize) {
+	//write filesize
+	uint32_t leafs = 0;
+	fwrite(&filesize, sizeof(long), 1, compf);
+	
+	//reserve space for leaf count
+	long loffs = ftell(compf);
+	fwrite(&leafs, sizeof(uint32_t), 1, compf);
+	
+	for (int byte=0;byte<256;byte++) {
+		if (codelens[byte] > 0) {
+			fwrite(&byte, 1, 1, compf);
+			fwrite(&codelens[byte], sizeof(uint8_t), 1, compf);
+			fwrite(&codes[byte], sizeof(uint32_t), 1, compf);
+			leafs++;
 		}
 	}
 	
 	//write leaf count
 	fseek(compf, loffs, SEEK_SET);
-	fwrite(&leaves, sizeof(uint32_t), 1, compf);
+	fwrite(&leafs, sizeof(uint32_t), 1, compf);
 	fseek(compf, 0, SEEK_END);
 }
 
-void writeData(FILE* origf, FILE* compf, uint32_t* codes, uint8_t* codelens, uint8_t blocksize) {
-	uint32_t b = 0;
-	uint32_t blk = 0;
-	uint8_t tmpbyte=0;
-	int ret = blocksize;
+//compress and write data to file
+void write_data(FILE* origf, FILE* compf, uint32_t* codes, uint8_t* codelens) {
+	uint32_t buffer = 0;
+	uint8_t byte = 0;
+	uint8_t tmpbyte = 0;
+	int ret = 1;
 	int bits = 0;
 	
 	rewind(origf);
 	
-	while (ret == blocksize) {
-		ret = fread(&blk, blocksize, 1, origf);
+	while (ret == 1) {
+		ret = fread(&byte, 1, 1, origf);
 		
-		bits += codelens[blk];
-		b=b|(codes[blk]<<(32-bits));
+		bits += codelens[byte];
+		buffer = buffer|(codes[byte]<<(32-bits));
 		
 		while (bits >= 8) {
-			tmpbyte = b>>24;
+			tmpbyte = buffer>>24;
 			fwrite(&tmpbyte, 1, 1, compf);
-			b<<=8;
+			buffer<<=8;
 			bits-=8;
 		}
-		//printf("buffer: 0x%02x, bits: %d\n", b, bits);
-		//printf("bits: %d\n", bits);
 	}
 	
+	//empty buffer
 	while (bits > 0) {
 		if (bits < 8) {
-			tmpbyte = b>>(32-bits);
+			tmpbyte = buffer>>(32-bits);
 			fwrite(&tmpbyte, 1, 1, compf);
 			break;
 		}
-		tmpbyte = b>>24;
+		tmpbyte = buffer>>24;
 		fwrite(&tmpbyte, 1, 1, compf);
-		b<<=8;
+		buffer<<=8;
 		bits-=8;
 	}
 }
 
-void decompress(FILE* compf, FILE* outfile) {
-	uint8_t blocksize;
-	fread(&blocksize, sizeof(uint8_t), 1, compf);
+//read compressed file header
+void read_header(FILE* compf, long* filesize, uint32_t* codes, uint8_t* codelens) {
+	uint32_t leafs;
 	
-	long filesize;
-	fread(&filesize, sizeof(long), 1, compf);
+	fread(filesize, sizeof(long), 1, compf);
+	fread(&leafs, sizeof(uint32_t), 1, compf);
 	
-	uint32_t leaves;
-	fread(&leaves, sizeof(uint32_t), 1, compf);
 	
-	int elems = 1<<blocksize*8;
-	uint32_t* codes = calloc(elems, sizeof(uint32_t));
-	uint8_t* codelens = calloc(elems, sizeof(uint8_t));
-	uint32_t blk = 0;
-	uint32_t tmp=0;
+	uint32_t byte = 0;
 	
+	
+	while (leafs>0) {
+		fread(&byte, 1, 1, compf);
+		fread(&codelens[byte], sizeof(uint8_t), 1, compf);
+		fread(&codes[byte], sizeof(uint32_t), 1, compf);
+		
+		//fprintf(stderr, "block: %1$x (%1$c), code: 0x%2$02x, len %3$d, pos: %4$d\n", blk, codes[blk], codelens[blk], pos);
+		leafs--;
+	}
+}
+
+//rebuild tree from codes
+heapNode* rebuild_tree(uint32_t* codes, uint8_t* codelens) {
 	//root of the tree
 	heapNode* root = malloc(sizeof(heapNode));
 	heapNode* tmpNode;
+	uint32_t code=0;
 	
-	while (leaves>0) {
-		fread(&blk, blocksize, 1, compf);
-		fread(&codelens[blk], sizeof(uint8_t), 1, compf);
-		fread(&codes[blk], sizeof(uint32_t), 1, compf);
-	
-		heapNode* n = newHeapNode(blk, codes[blk]);
-		tmp = codes[blk];
-		//pos=0;
-		tmpNode = root;
-		for (int i=1;i<codelens[blk];i++) {
-			if (tmp>>(codelens[blk]-i) & 1) {
-				//drop to right and create parent, if doesnt exist
-				if (tmpNode->right == NULL) {
-					tmpNode->right = malloc(sizeof(heapNode));
+	for(int byte = 0;byte<256;byte++) {
+		if (codelens[byte] > 0) {
+			heapNode* n = newHeapNode(byte, 0);
+			code = codes[byte];
+			tmpNode = root;
+			
+			//read bits from left to right
+			for (int i=1;i<codelens[byte];i++) {
+				if (code>>(codelens[byte]-i) & 1) {
+					//drop to right and create parent, if doesnt exist
+					if (tmpNode->right == NULL) {
+						tmpNode->right = malloc(sizeof(heapNode));
+					}
+					tmpNode = tmpNode->right;
+				} else {
+					//drop left
+					if (tmpNode->left == NULL) {
+						tmpNode->left = malloc(sizeof(heapNode));
+					}
+					tmpNode = tmpNode->left;
 				}
-				tmpNode = tmpNode->right;
+			}
+			
+			//rightmost(last) bit decides the side
+			if (code & 1) {
+				tmpNode->right=n;
 			} else {
-				//drop left
-				if (tmpNode->left == NULL) {
-					tmpNode->left = malloc(sizeof(heapNode));
-				}
-				tmpNode = tmpNode->left;
+				tmpNode->left=n;
 			}
 		}
-		//last rightmost bit decides the side
-		if (tmp & 1) {
-			tmpNode->right=n;
-		} else {
-			tmpNode->left=n;
-		}
-		
-		//fprintf(stderr, "block: %1$x (%1$c), code: 0x%2$02x, len %3$d, pos: %4$d\n", blk, codes[blk], codelens[blk], pos);
-		leaves--;
 	}
 	
-	
-	uint32_t bb = 0;
-	uint8_t byteb = 0;
+	return root;
+}
+
+//read and decompress data
+void read_data(FILE* compf, FILE* outfile, heapNode* root, long filesize) {
+	uint32_t buffer = 0;
+	uint8_t byte = 0;
 	int bits=0;
 	int ret;
 	
-	tmpNode = root;
-	ret = fread(&byteb, 1, sizeof(uint8_t), compf);
+	heapNode* tmpNode = root;
+	ret = fread(&byte, 1, sizeof(uint8_t), compf);
 	while (ret && filesize>0) {
-		bb=byteb<<24 | bb>>8;
+		buffer=byte<<24 | buffer>>8;
 		
 		bits+=8;
 		
 		while (bits>0 && filesize>0) {
 			//deal one bit (leftmost)
-			if (0x80000000 & bb) {
+			if (0x80000000 & buffer) {
 				//go right
 				tmpNode = tmpNode->right;
 			} else {
 				//go left
 				tmpNode = tmpNode->left;
 			}
-			bb<<=1;
+			buffer<<=1;
 			bits--;
 			
 			//if is leaf
 			if (tmpNode->right == NULL && tmpNode->left == NULL) {
-				//printf("%c", h->nodes[pos]->data);
-				fwrite(&tmpNode->data, blocksize, 1, outfile);
-				//fprintf(stdout, "%c", h->nodes[pos]->data);
-				//fprintf(stderr, "%ld\n", filesize);
+				fwrite(&tmpNode->data, 1, 1, outfile);
 				tmpNode = root;
 				filesize--;
 			}
 		}
-		ret = fread(&byteb, 1, sizeof(uint8_t), compf);
+		ret = fread(&byte, 1, sizeof(uint8_t), compf);
 	}
-	
-	free(codelens);
 }
 
+//decompress file
+void decompress(FILE* compf, FILE* outfile) {
+	uint32_t* codes = calloc(256, sizeof(uint32_t));
+	uint8_t* codelens = calloc(256, sizeof(uint8_t));
+	long filesize;
+	
+	read_header(compf, &filesize, codes, codelens);
+	heapNode* root;
+	root = rebuild_tree(codes, codelens);
+	
+	read_data(compf, outfile, root, filesize);
+}
 
-void compress(FILE* origf, FILE* compf, uint8_t blocksize) {
-		uint32_t elems = 1 << blocksize*8;
-		
-		heap* h = loadHeap(origf, sizeof(uint8_t)*blocksize);
-		huff(h);
-		
-		uint32_t* codes = calloc(elems, sizeof(uint32_t));
-		uint8_t* codelens = calloc(elems, sizeof(uint8_t));
-		
-		long filesize = ftell(origf);
-		
-		writeHeader(compf, h->nodes[0], blocksize, codes, codelens, filesize);
-		writeData(origf, compf, codes, codelens, blocksize);
+//compress file
+void compress(FILE* origf, FILE* compf) {
+	uint32_t* bytes;
+	bytes = read_bytes(origf);
+	
+	heap* h;
+	h = load_heap(bytes);
+	
+	heapNode* root;
+	root = build_huffman_tree(h);
+	
+	uint32_t* codes = calloc(256, sizeof(uint32_t));
+	uint8_t* codelens = calloc(256, sizeof(uint8_t));
+	
+	long filesize = ftell(origf);
+	
+	huffman_codes(root, codes, codelens);
+	write_header(compf, codes, codelens, filesize);
+	write_data(origf, compf, codes, codelens);
 }

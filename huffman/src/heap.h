@@ -13,8 +13,8 @@ typedef struct heapheader {
 } heap;
 
 typedef struct heapnode {
-	uint32_t value;
 	uint32_t data;
+	uint32_t value;
 	uint32_t index;
 	
 	struct heapnode* left;
