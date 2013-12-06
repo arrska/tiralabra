@@ -17,6 +17,7 @@ typedef struct heapnode {
 	uint32_t value;
 	uint32_t index;
 	
+	//these are only for usage in tree mode
 	struct heapnode* left;
 	struct heapnode* right;
 } heapNode;

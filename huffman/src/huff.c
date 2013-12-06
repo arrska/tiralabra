@@ -22,6 +22,8 @@ uint32_t* read_bytes(FILE* file) {
 
 //build heap from byte frequencies
 heap* load_heap(uint32_t* bytes) {
+	if (bytes == NULL)
+		return NULL;
 	heap* h = newHeap(256);
 	
 	for (int i = 0;i<256;i++) {
@@ -35,6 +37,8 @@ heap* load_heap(uint32_t* bytes) {
 
 //build huffman tree from byteheap
 heapNode* build_huffman_tree(heap* h) {
+	if (h == NULL)
+		return NULL;
 	heapNode* l;
 	heapNode* r;
 	heapNode* nn;
@@ -55,7 +59,11 @@ heapNode* build_huffman_tree(heap* h) {
 
 //traverse tree to find codes
 void huffman_codes(heapNode* root, uint32_t* codes, uint8_t* codelens) {
-	stack* s = malloc(sizeof(stack));
+	if (root == NULL || codes == NULL || codelens == NULL)
+		return;
+		
+	stack* s = newStack();
+	//stack* s = malloc(sizeof(stack));
 	struct stackelem* e = newStackElem(root);
 	struct stackelem* r;
 	struct stackelem* l;
@@ -69,7 +77,7 @@ void huffman_codes(heapNode* root, uint32_t* codes, uint8_t* codelens) {
 		if (n->left == NULL && n->right == NULL) {
 			codes[n->data] = e->code;
 			codelens[n->data] = e->codelen;
-			printf("data: 0x%04x (%c), code: 0x%04x, codelen: %d\n", n->data, n->data, e->code, e->codelen);
+			//printf("data: 0x%04x (%c), code: 0x%04x, codelen: %d\n", n->data, n->data, e->code, e->codelen);
 			free(e);
 		} else {
 			if (n->right) {
@@ -88,6 +96,8 @@ void huffman_codes(heapNode* root, uint32_t* codes, uint8_t* codelens) {
 		}
 		e = stackPop(s);
 	}
+	
+	free(s);
 }
 
 //write codes for symbols into file header
@@ -280,9 +290,9 @@ void compress(FILE* origf, FILE* compf) {
 	uint32_t* codes = calloc(256, sizeof(uint32_t));
 	uint8_t* codelens = calloc(256, sizeof(uint8_t));
 	
-	long filesize = ftell(origf);
-	
 	huffman_codes(root, codes, codelens);
+	
+	long filesize = ftell(origf);
 	write_header(compf, codes, codelens, filesize);
 	write_data(origf, compf, codes, codelens);
 }

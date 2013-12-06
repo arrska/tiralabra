@@ -19,6 +19,9 @@ heapNode* newHeapNode(uint32_t data, uint32_t value) {
 	newnode->value = value;
 	newnode->index = -1;
 	
+	newnode->left = NULL;
+	newnode->right = NULL;
+	
 	return newnode;
 }
 

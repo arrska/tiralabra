@@ -4,9 +4,9 @@ orighash=$(md5sum $1 | cut -d' ' -f1)
 origlen=$($(which ls) -l $1 | cut -d' ' -f5)
 
 newfile=hufftest.$RANDOM
-./main c $1 $newfile.hff
+../main c $1 $newfile.hff
 
-./main d $newfile.hff $newfile
+../main d $newfile.hff $newfile
 newhash=$(md5sum $newfile | cut -d' ' -f1)
 newlen=$($(which ls) -l $newfile | cut -d' ' -f5)
 
