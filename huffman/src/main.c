@@ -10,7 +10,7 @@
 void print_help(char* binname) {
 	printf("\
 usage: %s d | c FILE [FILE2]\n\
-  compresses or decompresses FILE\n\
+compresses or decompresses FILE\n\
     d decompress FILE and output to FILE2\n\
     c compress FILE to FILE2\n\
     FILE2 defaults to stdout\n", binname);

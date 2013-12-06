@@ -1,0 +1,183 @@
+\documentclass[a4paper, 12pt, finnish]{article}
+\usepackage{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+
+\usepackage{listings}
+\usepackage{color}
+\usepackage{float}
+
+\lstset{
+   showlines=true
+}
+
+\title{Tietorakenteiden ja algoritmien harjoitustyö: Huffman-koodaus}
+\author{
+  Aaro Lehikoinen
+}
+\date{06.12.2013}
+
+\begin{document}
+ \maketitle
+% \tableofcontents
+
+  \section{Määrittely}
+
+   \subsection{Huffman-koodaus}
+Huffman-koodaus on tiedon pakkaamiseen käytettävä algoritmi. Algoritmin idea on kartoittaa aakkoston eri merkkien esiintymisfrekvenssit ja koodata jokainen merkki mahdollisimman lyhyellä bittijonolla siten, että eniten käytetty merkki saa lyhyimmän bitti-ilmauksen ja vähiten käytetty pisimmän.
+
+   \subsection{Algoritmin yksityiskohdat}
+Pakkauksen ensimmäinen askel on pakattavan datan aakkoston merkkien esiintymisfrekvenssien selvittäminen. Tämä vaatii merkkien esiintymien laskemisen datasta, siis koko pakattavan datan läpikäynnin. Tämän jälkeen rakennetaan Huffman-puu. Aluksi jokaista merkkiä käsitellään puun lehtenä, jonka arvona on sen esiintymisfrekvenssi. Valitaan ensin kaksi harvinaisinta merkkiä, eli pienimmät arvot omaavaa lehteä, ja tehdään niille emosolmu, jonka arvoksi tulee lastensa arvojen summa. Luotua solmua kohdellaan samoin kuin alkuperäisiä solmuja. Lapsiksi alennetut solmut eivät enää ole käsiteltävien solmujen listassa. Jatkamme samaa poimien aina kaksi pienimmät arvot omaavaa solmua ja luomalla niille emon, kunnes jäljellä on vain yksi solmu, jonka arvo on kaikkien merkkien esiintymistiheyksien summa eli 1. Tuloksena on puu, jonka lehtisolmuina ovat kaikki aakkoston merkit.
+
+Merkkien koodaus on on bittijono, joka saadaan kulkemalla juuresta solmuun. Kuljettaessa aina oikealle lisätään bittijonoon 1 ja vasemmalle 0. Tällöin solmuun päästessä ollaan saatu bittijono, joka kertoo merkin bittiesityksen pakatussa datassa. Itse pakkaaminen tehdään käymällä data läpi merkki kerrallaan ja kirjoittamalla aina merkin koodaus tiedostoon.
+
+Näin pakatun datan purkaminen käy rekonstruoimalla puu ja lukemalla pakattua dataa bitti kerrallaan. Lähtemällä liikkeelle juuresta ja valitsemalla aina luetun bitin mukainen siirtymä, eli 1-bitillä oikea ja 0-bitillä vasen, löydetään lehti, jossa on etsimämme merkki. Lehteen päästäessä tulostetaan löydetty merkki, siirrytään takaisin juurisolmuun ja jatketaan datan lukemista.
+
+\subsection{Tehokkuus}
+
+Koodauksen voi siis jakaa helposti vaiheisiin
+\begin{enumerate}
+\item Lue datan aakkosto ja laske merkkien esiintymisfrekvenssit
+\item Rakenna Huffman-puu
+\item Etsi kunkin merkin bittiesitys puusta
+\item Pakkaa data
+\end{enumerate}
+Merkitään jatkossa $n$ = datan koko ja $k$ = aakkoston koko. Periaatteessa $k$ on vakio.
+\\
+
+\subsubsection{Esiintymisfrekvenssien selvitys}
+Ensimmäisen kohdan aikavaativuus on $O(n)$, koska koko data käydään kertaalleen läpi ja jokaisen luetun merkin kohdalla kasvatetaan sen laskuria yhdellä. Oletuksena, että merkistö on ennalta tiedossa (esim. aakkoset tai tavut) ja tietorakenne, jossa lukumäärät muistataan on valmiiksi rakennettu ja sen alkioiden arvojen muuttaminen tapahtuu vakioajassa. Käytännössä toteutus voi olla yksinkertainen taulukko, jossa on jokaiselle merkille alkio, jonka arvo on 0. Taulukon alustamiseen menee aakkoston koon verran aikaa. Vaiheen tilavaativuus on $O(k)$ olettaen, että datasta on muistissa kerrallaan vain yksi merkki.
+\\\\
+Pseudokoodiesitys:
+
+
+\begin{lstlisting}
+lukumaarat = []
+
+while tiedostoa jaljella
+  m = lue merkki
+  lukumaarat[m]++
+
+\end{lstlisting}
+\subsubsection{Huffman-puun rakentaminen}
+Toinen kohta voidaan jakaa vaiheisiin
+\begin{description}
+\item[a.] Järjestä solmut
+\item[b.] Poimi kaksi pienintä solmua
+\item[c.] Luo uusi emosolmu
+\item[d.] Palaa vaiheeseen a, jos solmuja jäljellä
+\end{description}
+\vspace{1\baselineskip}\vspace{-\parskip}
+ja esittää pseudokoodina näin:
+
+\begin{lstlisting}
+while solmut.lukumaara > 1
+  solmut.jarjesta()
+  oikea=solmut.poistapienin()
+  vasen=solmut.poistapienin()
+  emo=uusisolmu(oikea+vasen)
+  emo.vasenlapi=vasen
+  emo.oikealapsi=oikea
+  solmut.lisaa(emo)
+
+\end{lstlisting}
+Silmukka suoritetaan kunnes solmuja on jäljellä yksi. Koska jokaisessa suorituksessa solmuista poistetaan kaksi ja lisätään yksi, suoritetaan silmukka kerran solmua kohden, eli merkkien lukumäärän verran. Tästä nähdään myös, että syntyvässä puussa on noin tuplasti solmuja alkuperäiseen puuhun, eli akkostoon, verrattuna. Koska silmukka suoritetaan vain k-1 kertaa, lopullinen solmujen lukumäärä on $k+k-1=2k-1$. Tämä johtuu siitä, että \textit{solmut}-joukosta poistettavat solmut ovat kuitenkin muodostuvan puun solmuja.
+Silmukan sisällä tapahtuvat operaatiot järjestä, poistapienin ja lisää. Nämä kaikki toimivat ajassa $O(log~k)$ jos solmut säilytetään minimikeossa. Keon järjestäminen tarvitsee tehdä vain kerran ennen silmukkaan astumista, koska keko-operaatiot poistapienin ja lisää pitävät keon järjestyksessä suorittamalla korjaavat toimenpiteet ajassa $O(log~k)$. Täytyy muistaa, että näiden operaatioiden aikavaativuus on verrannollinen aakkoston ($k$), ei pakattavan datan kokoon ($n$). Aakkoston koko on usein huomattavasti pienempi, muussa tapaukssa pakkaaminen ei edes ole hyödyllistä.
+Käsiteltävä puu voi kuitenkin olla pahasti epätasapainossa. Puun rakennusvaiheessa korkeus kasvaa aina kun toinen kahdesta solmusta kuuluu jo puuhun. Tällaisessa tapauksessa puun korkeus kasvaa yhdellä. Jokaisella silmukan suorituskerralla voi käydä näin, jos yhteenlaskettava arvo on aina pienempi kuin seuraavaksi pienin arvo. Tällöin jokaisen solmun arvo on aina kaksinkertainen edeltävän solmun arvoon verrattuna. Esimerkiksi $arvo_{i}=2^i$. Täten tällaisessa pahimmassa tapauksessa puun korkeudeksi tulee $k-1$.
+Tilaa algoritmi vie eniten silmukan viimeisellä suorituskerralla, jolloin uusia solmuja on luotu $k-1$ kappaletta. Tilavaativuutena siis $O(k)$.
+
+\subsubsection{Koodausten etsiminen puusta}
+Kolmannessa vaiheessa kuljetaan kaikki reitit juuresta lehtiin läpi löytääksemme koodaukset. Tämä on toteutettavissa yksinkertaisesti pinoa ja syvyyssuuntaista hakua käyttämällä.
+\\
+Pseudokoodiesitys bittijonot selvittävälle läpikäynnille:
+
+\begin{lstlisting}
+pino.push(huffpuu.juuri)
+
+while not empty pino
+  solmu = pino.pop()
+  if solmu on lehti
+    koodit[solmu.merkki]=solmu.koodaus
+    continue //takaisin silmukan suorituksen alkuun
+  
+  if solmu has left child
+    vasen=solmu.vasen
+    vasen.koodaus=solmu.koodaus+0
+    pino.push(vasen)
+  
+  if solmu has right child
+    oikea=solmu.oikea
+    oikea.koodaus=solmu.koodaus+0
+    pino.push(oikea)
+
+\end{lstlisting}
+Pinon push- ja pop-operaatiot toimivat vakioajassa. Pinoon laitetaan aina kertaalleen jokainen solmu, joten silmukka suoritetaan niin monta kertaa kuin solmuja on. Kuten aiemmin todettiin, solmuja on $2k-1$ kappaletta. Aikavaativuus siis on $O(k)$. Aiemmin todettiin myös, että puun maksimikorkeus on $k-1$. Syvyyssuuntaisen läpikäynnin tilavaativuus riippuu pinossa kerrallaan olevien solmujen määrästä. Korkeimmalla paikalla olevaa lehteä tarkasteltaessa on siis kaikki polulla olevat solmut pinossa. Tilavaativuuskin on siis $O(k)$.
+
+\subsubsection{Pakkaus}
+Neljäs vaihe, datan pakkaus, voidaan esittää pseudokoodina:
+
+\begin{lstlisting}
+while tiedostoa jaljella
+  m=lue merkki
+  pakattudata+=koodit[m]
+	
+
+\end{lstlisting}
+Tämän vaiheen silmukka suoritetaan n-kertaa ja kaikki silmikassa suoritettavat operaatiot ovat vakioaikaisia. Pakkausvaiheen aikavaativuus on siis $O(n)$.
+
+\subsection{Purkaminen}
+Pakatun datan purkaminen tapahtuu saman Huffman-puun avulla kuin pakkaaminen. Puussa kuljetaan aina juuresta kohti lehteä jokaisen luetun bitin kohdalla. Aikavaativuutena luonnollisesti $O(n)$.
+Pseudokoodiesitys:
+\begin{lstlisting}
+while tiedostoa jaljella
+  b=lue bitti
+  if bitti=1
+    solmu=solmu.oikea
+  if bitti=0
+    solmu=solmu.vasen
+  if solmu on lehti
+    data+=solmu.data
+    solmu=juuri
+
+\end{lstlisting}
+
+\subsection{Yhteenveto}
+Koko algoritmin suorittamiseen menee siis käytännössä $O(n)$ aikaa, koska hitaimmat vaiheet kuuluvat tähän luokkaan.
+
+\subsection{Lähteet}
+\url{http://fi.wikipedia.org/wiki/Huffmanin_koodaus}
+\\
+\url{http://en.wikipedia.org/wiki/Huffman_coding}
+
+
+\section{Toteutus}
+\subsection{Tehokkuus}
+Toteutukseni ohjelmalogiikka on noudattaa määrittelyssä esiteltyä vaiheitusta.
+\subsubsection{Pakkaus}
+Metodi
+\begin{itemize}
+\item read\_bytes käy tiedoston kerran läpi ja lukee taajuudet taulukkoon. $O(n)$
+\item load\_heap rakentaa minimikeon, joka toteuttaa prioriteettijonon. $O(k~log~k)$
+\item build\_huffman\_tree rakentaa puun. $O(k~log~k)$
+\item huffman\_codes käy rakennetun puun läpi. $O(k)$
+\item write\_header ja write\_data pakkaavat datan ja kirjoittavat datat tiedostoon. $O(n)$
+\end{itemize}
+\subsubsection{Purkaminen}
+Metodi
+\begin{itemize}
+\item read\_header lukee otsakkeen. $O(k)$
+\item rebuild\_tree rakentaa puun uudestaan otsakkeen tiedoista. $O(k)$
+\item read\_data lukee ja purkaa datan $O(n)$
+\end{itemize}
+
+
+\section{Testaus}
+Kaikille metodeille toteutettiin kattavat yksikkötestit ja suorituskykytestit käyttäen modifioitua MinUnit (\url{http://www.jera.com/techinfo/jtns/jtn002.html}) yksikkötestauskehystä. Testit generoivat satunnaisia syötteitä ja käyttävät ennalta määriteltyjä syötetiedostoja. Suorituskykytesteissä vaiheet ajetaan usealla erikokoisella syötteellä ja ajoaikoja vertaillaan.
+
+Lisäksi testattiin käsin pakkaustehoa, joka osoittautui tekstitiedostoilla erittäin hyväksi (noin 50\% 30 kilotavun lähdekoodipaketilla). Validitytest.sh-skriptiä käytettiin ennen yksikkötestien perusteellista toteuttamista oikeellisuuden tarkastelemiseksi.
+
+Suorituskykytestit antoivat odotettuja tuloksia. Keko-operaatioiden aikavaativuus oli $O(log~n)$ ja pakkaamisen ja purkamisen aikavaativuus luokkaa $O(n)$.
+
+\end{document}
