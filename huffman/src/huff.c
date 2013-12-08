@@ -151,11 +151,6 @@ void write_data(FILE* origf, FILE* compf, uint32_t* codes, uint8_t* codelens) {
 	
 	//empty buffer
 	while (bits > 0) {
-		if (bits < 8) {
-			tmpbyte = buffer>>(32-bits);
-			fwrite(&tmpbyte, 1, 1, compf);
-			break;
-		}
 		tmpbyte = buffer>>24;
 		fwrite(&tmpbyte, 1, 1, compf);
 		buffer<<=8;

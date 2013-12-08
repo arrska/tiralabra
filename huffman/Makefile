@@ -2,10 +2,14 @@ MAIN_DIR = src
 TEST_DIR = test
 
 all: main test run-test
-main:
-	$(MAKE) -C $(MAIN_DIR)
 
-test:
+main: huffman
+
+huffman:
+	$(MAKE) -C $(MAIN_DIR)
+	
+test: testhuff
+testhuff:
 	$(MAKE) -C $(TEST_DIR)
 
 clean: clean-main clean-test

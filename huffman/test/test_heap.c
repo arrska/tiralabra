@@ -291,8 +291,8 @@ char* test_insert_performance() {
 	
 	for(int i=0;i<tests-1;i++) {
 		//allow margin of 1
-		mu_assert("inserting elements into small heap should be about faster than inserting them into big heap", test_time[i] <= test_time[i+1]+1);
 		//printf("time1: %lu, time1: %lu, time2/time1: %lf\n", test_time[i], test_time[i+1], (double)test_time[i+1]/(double)test_time[i]);
+		mu_assert("inserting elements into small heap should be about faster than inserting them into big heap", test_time[i] <= test_time[i+1]+1);
 		mu_assert("inserting elements into big heap should be not be n times slower than inserting them into n times smaller heap", (double)test_time[i+1]/(double)test_time[i]<2);
 	}
 	

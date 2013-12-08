@@ -278,7 +278,7 @@ char* test_write_header() {
 char* test_write_data() {
 	uint8_t expected_data[16] = {
 	  0xD6, 0x79, 0xE7, 0x9E, 0x79, 0xF7, 0x75, 0x55, 
-	  0x5D, 0xDD, 0xD9, 0xE7, 0x9F, 0x5D, 0x67, 0x27
+	  0x5D, 0xDD, 0xD9, 0xE7, 0x9F, 0x5D, 0x67, 0x9C
 	};
 
 	FILE* srcf = fopen("testfiles/threebytes", "r");
@@ -310,12 +310,14 @@ char* test_write_data() {
 			break;
 		}
 		
-		mu_assert("write_data produced wrong header", byte==expected_data[offs]);
+		mu_assert("write_data produced wrong data", byte==expected_data[offs]);
 		offs++;
 	}
 	
 	fclose(f);
 	fclose(srcf);
+	free(codes);
+	free(codelens);
 	return 0;
 }
 
